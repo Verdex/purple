@@ -20,7 +20,6 @@ pub struct Label(usize);
 pub struct Symbol(usize);
 
 pub struct FuncDef<'a, T : Clone + ToData<'a, T>> {
-    pub name : Func,
     pub params : Vec<Label>,
     pub body : Vec<Instr<'a, T>>,
 }
@@ -46,6 +45,10 @@ pub struct Locals<'a, T> where T : Clone + ToData<'a, T> {
 } 
 
 impl<'a, T> Locals<'a, T> where T : Clone + ToData<'a, T> {
+    pub fn new() -> Self {
+        Locals { v : vec![] }
+    }
+
     pub fn get(&self, sym : &Symbol) -> Result<Data<'a, T>, Box<dyn std::error::Error>> {
         if self.v.len() <= sym.0 {
             Err(Box::new(VmError::SymbolDoesNotExist(sym.0)))
