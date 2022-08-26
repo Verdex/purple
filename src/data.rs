@@ -30,7 +30,6 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
     Jump(Label),
     BranchOnTrue(Label, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<bool, Box<dyn std::error::Error>>>),
     Return(Symbol),
-    Load { dest : Symbol, src : Symbol },
     LoadValue(Symbol, T),
     LoadFromReturn(Symbol),
     PushParam(Symbol),
@@ -48,6 +47,11 @@ pub struct Locals<'a, T> where T : Clone + ToData<'a, T> {
 
 impl<'a, T> Locals<'a, T> where T : Clone + ToData<'a, T> {
     pub fn get(&self, sym : &Symbol) -> Result<Data<'a, T>, Box<dyn std::error::Error>> {
-        Err(Box::new(VmError::Todo))
+        if self.v.len() <= sym.0 {
+            Err(Box::new(VmError::SymbolDoesNotExist(sym.0)))
+        }
+        else {
+            Ok(self.v[sym.0].clone())
+        }
     }
 }

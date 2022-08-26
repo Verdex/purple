@@ -1,12 +1,12 @@
 #[derive(Debug)]
 pub enum VmError {
-    Todo
+    SymbolDoesNotExist(usize),
 }
 
 impl std::fmt::Display for VmError {
     fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            VmError::Todo => write!(f, "TODO"),
+            VmError::SymbolDoesNotExist(sym) => write!(f, "symbol does not exist:  {}", sym),
         }
     }
 }
