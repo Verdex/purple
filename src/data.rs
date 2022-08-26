@@ -41,17 +41,18 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
 
 #[derive(Debug, Clone)]
 pub struct Locals<'a, T> where T : Clone + ToData<'a, T> {
+    f : usize,
     v : Vec<Data<'a, T>>,
 } 
 
 impl<'a, T> Locals<'a, T> where T : Clone + ToData<'a, T> {
-    pub fn new() -> Self {
-        Locals { v : vec![] }
+    pub fn new(func : usize) -> Self {
+        Locals { v : vec![], f : func }
     }
 
     pub fn get(&self, sym : &Symbol) -> Result<Data<'a, T>, Box<dyn std::error::Error>> {
         if self.v.len() <= sym.0 {
-            Err(Box::new(VmError::SymbolDoesNotExist(sym.0)))
+            Err(Box::new(VmError::SymbolDoesNotExist { func : self.f, sym : sym.0 }))
         }
         else {
             Ok(self.v[sym.0].clone())

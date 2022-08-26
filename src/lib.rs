@@ -28,7 +28,7 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
     let mut current_function = 0;
     let mut instrs = &func_defs[current_function].body;
     let mut instr_ptr = 0;
-    let mut locals : Locals<'a, T> = Locals::new();
+    let mut locals : Locals<'a, T> = Locals::new(current_function);
     let mut label_map : HashMap<Label, usize> = HashMap::new();
 
     loop {
@@ -45,8 +45,9 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
         }
 
         /*match instrs[instr_ptr] {
-            Instr::Label(Label) =>
-
+            Instr::Label(Label) => {
+                
+            }
             Instr::Jump(Label),
             Instr::BranchOnTrue(Label, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<bool, Box<dyn std::error::Error>>>),
             Instr::Return(Symbol),
@@ -62,7 +63,7 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
 
     }
 
-    Err(Box::new(VmError::SymbolDoesNotExist(0)))
+    Err(Box::new(VmError::SymbolDoesNotExist { func: 0, sym: 0 }))
 }
 
 #[cfg(test)]
