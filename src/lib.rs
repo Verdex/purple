@@ -1,3 +1,11 @@
+
+mod error;
+mod data;
+
+use crate::error::VmError;
+use crate::data::*;
+
+
 #[cfg(test)]
 mod tests {
     #[test]
