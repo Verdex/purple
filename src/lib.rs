@@ -44,11 +44,13 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
             instrs = &func_defs[current_function].body;
         }
 
-        /*match instrs[instr_ptr] {
-            Instr::Label(Label) => {
-                
-            }
-            Instr::Jump(Label),
+        match instrs[instr_ptr] {
+            Instr::Label(label) => 
+                match label_map.insert( label, instr_ptr + 1 ) {
+                    Some(_) => return Err(Box::new(VmError::RedefinitionOfLabel { label : label.0, func : current_function})),
+                    None => { instr_ptr += 1; },
+                },
+            /*Instr::Jump(Label),
             Instr::BranchOnTrue(Label, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<bool, Box<dyn std::error::Error>>>),
             Instr::Return(Symbol),
             Instr::LoadValue(Symbol, T),
@@ -58,8 +60,9 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
             Instr::LoadFunc(Symbol, Func),
             Instr::Call(Symbol),
             Instr::SysCall(Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<(), Box<dyn std::error::Error>>>),
-            Instr::LoadFromSysCall(Symbol, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
-        }*/
+            Instr::LoadFromSysCall(Symbol, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),*/
+            _ => panic!("TODO remove"),
+        }
 
     }
 

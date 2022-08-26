@@ -13,11 +13,11 @@ pub enum Data<'a, T : Clone + ToData<'a, T>> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Func(usize);
+pub struct Func(pub usize);
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct Label(pub usize);
 #[derive(Debug, Clone, Copy)]
-pub struct Label(usize);
-#[derive(Debug, Clone, Copy)]
-pub struct Symbol(usize);
+pub struct Symbol(pub usize);
 
 pub struct FuncDef<'a, T : Clone + ToData<'a, T>> {
     pub params : Vec<Label>,
