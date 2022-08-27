@@ -35,9 +35,13 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
     PushParam(Symbol),
     LoadFromExec(Symbol, Box<dyn Fn(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
     LoadFunc(Symbol, Func),
-    Call(Symbol),
-    SysCall(Box<dyn Fn(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<(), Box<dyn std::error::Error>>>),
-    LoadFromSysCall(Symbol, Box<dyn Fn(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
+    Call(Symbol), // TODO can probably get rid of ToData if we insist that the symbol points to a func
+                  // with the get from address at symbol we should be able to pull out funcs from heap
+    SysCall(fn(&Locals<'a, T>, &'a mut Vec<Data<'a, T>>) -> Result<(), Box<dyn std::error::Error>>),
+    LoadFromSysCall(Symbol, Box<dyn Fn(&Locals<'a, T>, &'a mut Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
+    // TODO:  alloc heap slot, put address in symbol; free address in symbol
+    // TODO:  store in address at symbol
+    // TODO:  get from address at symbol
 }
 
 #[derive(Debug, Clone)]

@@ -30,6 +30,7 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
     let mut instr_ptr = 0;
     let mut locals : Locals<'a, T> = Locals::new(current_function);
     let mut label_map : HashMap<Label, usize> = HashMap::new();
+    let mut ret = None;
 
     loop {
 
@@ -44,23 +45,64 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
             instrs = &func_defs[current_function].body;
         }
 
-        match instrs[instr_ptr] {
+        match &instrs[instr_ptr] {
             Instr::Label(label) => 
-                match label_map.insert( label, instr_ptr + 1 ) {
+                match label_map.insert( *label, instr_ptr + 1 ) {
                     Some(_) => return Err(Box::new(VmError::RedefinitionOfLabel { label : label.0, func : current_function})),
                     None => { instr_ptr += 1; },
                 },
-            /*Instr::Jump(Label),
-            Instr::BranchOnTrue(Label, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<bool, Box<dyn std::error::Error>>>),
-            Instr::Return(Symbol),
-            Instr::LoadValue(Symbol, T),
-            Instr::LoadFromReturn(Symbol),
-            Instr::PushParam(Symbol),
+            Instr::Jump(label) =>
+                match label_map.get(label) {
+                    Some(ptr) => instr_ptr = *ptr,
+                    None => return Err(Box::new(VmError::LabelDoesNotExist {label : label.0, func : current_function})),
+                },
+            Instr::BranchOnTrue(label, f) => {
+                if f(&locals)? {
+                    match label_map.get(label) {
+                        Some(ptr) => instr_ptr = *ptr,
+                        None => return Err(Box::new(VmError::LabelDoesNotExist {label : label.0, func : current_function})),
+                    }
+                }
+                else {
+                    instr_ptr += 1;
+                }
+            },
+            Instr::Return(sym) => {
+                ret = Some(locals.get(sym)?);
+
+                if stack.len() == 0 {
+                    break;
+                }
+
+                Frame { instr_ptr, locals, current_function, label_map } = stack.pop().unwrap();
+                // NOTE:  We don't have to check if current_function exists because if we're poping
+                // then we must have called it previously.
+                instrs = &func_defs[current_function].body;
+            },
+            Instr::LoadValue(sym, data) => {
+                locals.set(sym, Data::Value(data.clone()))?;
+                instr_ptr += 1;
+            },
+            Instr::LoadFromReturn(sym) => {
+                match ret {
+                    Some(ref ret) => {
+                        locals.set(sym, ret.clone())?;
+                        instr_ptr += 1;
+                    },
+                    None => return Err(Box::new(VmError::ReturnNotSet { func: current_function, sym: sym.0 })),
+                }
+            },
+            /*Instr::PushParam(Symbol),
             Instr::LoadFromExec(Symbol, Box<dyn FnMut(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
             Instr::LoadFunc(Symbol, Func),
-            Instr::Call(Symbol),
-            Instr::SysCall(Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<(), Box<dyn std::error::Error>>>),
-            Instr::LoadFromSysCall(Symbol, Box<dyn FnMut(&Locals<'a, T>, &'a Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),*/
+            Instr::Call(Symbol),*/
+            Instr::SysCall(f) => {
+                f(&locals, heap)?;
+                instr_ptr += 1;
+            },
+            Instr::LoadFromSysCall(sym, f) => {
+
+            },
             _ => panic!("TODO remove"),
         }
 
