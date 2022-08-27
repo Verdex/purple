@@ -8,7 +8,7 @@ pub trait ToData<'a, T> where T : Clone + ToData<'a, T> {
 
 #[derive(Debug, Clone)]
 pub enum Data<'a, T : Clone + ToData<'a, T>> {
-    Address(&'a T),
+    Address(&'a T), // TODO probably becomes Address(Heap)
     Value(T),
     Func(Func),
 }
@@ -37,11 +37,10 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
     LoadFunc(Symbol, Func),
     Call(Symbol), // TODO can probably get rid of ToData if we insist that the symbol points to a func
                   // with the get from address at symbol we should be able to pull out funcs from heap
-    SysCall(fn(&Locals<'a, T>, &'a mut Vec<Data<'a, T>>) -> Result<(), Box<dyn std::error::Error>>),
-    LoadFromSysCall(Symbol, Box<dyn Fn(&Locals<'a, T>, &'a mut Vec<Data<'a, T>>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
-    // TODO:  alloc heap slot, put address in symbol; free address in symbol
-    // TODO:  store in address at symbol
-    // TODO:  get from address at symbol
+    Alloc { dest: Symbol, contents : Symbol }, 
+    Free(Symbol),
+    Store { address: Symbol, contents : Symbol },
+    Get { address: Symbol, dest: Symbol },
 }
 
 #[derive(Debug, Clone)]

@@ -92,17 +92,39 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
                     None => return Err(Box::new(VmError::ReturnNotSet { func: current_function, sym: sym.0 })),
                 }
             },
-            /*Instr::PushParam(Symbol),
-            Instr::LoadFromExec(Symbol, Box<dyn FnMut(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
-            Instr::LoadFunc(Symbol, Func),
-            Instr::Call(Symbol),*/
-            Instr::SysCall(f) => {
-                f(&locals, heap)?;
-                instr_ptr += 1;
-            },
-            Instr::LoadFromSysCall(sym, f) => {
+            Instr::Call(sym) => {
+                match locals.get(sym)? {
+                    Data::Func(f) => {
+
+                        if func_defs.len() <= f.0 {
+                            return Err(Box::new(VmError::FunctionDoesNotExist(f.0)));
+                        }
+
+                        let old_function = current_function;
+                        let mut old_instrs = &func_defs[f.0].body;
+                        let old_instr_ptr = instr_ptr;
+                        let mut old_locals : Locals<'a, T> = Locals::new(f.0);
+                        let mut old_label_map : HashMap<Label, usize> = HashMap::new();
+
+                        current_function = f.0;
+                        instr_ptr = 0;
+                        std::mem::swap(&mut old_instrs, &mut instrs);
+                        std::mem::swap(&mut old_locals, &mut locals);
+                        std::mem::swap(&mut old_label_map, &mut label_map);
+
+                        stack.push(Frame { instr_ptr: old_instr_ptr
+                                         , locals: old_locals
+                                         , current_function: old_function
+                                         , label_map: old_label_map
+                                         });
+                    },
+                    _ => return Err(Box::new(VmError::AttemptToCallNonFunction { current_func: current_function })),
+                }
 
             },
+            /*Instr::PushParam(Symbol),
+            Instr::LoadFromExec(Symbol, Box<dyn FnMut(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
+            Instr::LoadFunc(Symbol, Func),*/
             _ => panic!("TODO remove"),
         }
 

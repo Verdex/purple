@@ -5,6 +5,7 @@ pub enum VmError {
     RedefinitionOfLabel { func : usize, label : usize },
     LabelDoesNotExist { func : usize, label : usize },
     ReturnNotSet { func : usize, sym : usize },
+    AttemptToCallNonFunction { current_func : usize },
 }
 
 impl std::fmt::Display for VmError {
@@ -16,6 +17,8 @@ impl std::fmt::Display for VmError {
             VmError::LabelDoesNotExist { func, label } => write!(f, "label {} does not exist in function {}", label, func),
             VmError::ReturnNotSet { func, sym } => 
                 write!(f, "return not set in function {} for set into symbol {}", func, sym),
+            VmError::AttemptToCallNonFunction { current_func } => 
+                write!(f, "attempt to call non-function in function {}", current_func),
         }
     }
 }
