@@ -6,6 +6,7 @@ pub enum VmError {
     LabelDoesNotExist { func : usize, label : usize },
     ReturnNotSet { func : usize, sym : usize },
     AttemptToCallNonFunction { current_func : usize },
+    AttemptToPopEmptyParams { current_func : usize, sym : usize },
 }
 
 impl std::fmt::Display for VmError {
@@ -19,6 +20,8 @@ impl std::fmt::Display for VmError {
                 write!(f, "return not set in function {} for set into symbol {}", func, sym),
             VmError::AttemptToCallNonFunction { current_func } => 
                 write!(f, "attempt to call non-function in function {}", current_func),
+            VmError::AttemptToPopEmptyParams { current_func, sym } =>
+                write!(f, "attempt to pop empty params in function {} into symbol {}", current_func, sym),
         }
     }
 }

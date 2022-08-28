@@ -33,6 +33,7 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
     LoadValue(Symbol, T),
     LoadFromReturn(Symbol),
     PushParam(Symbol),
+    PopParam(Symbol),
     LoadFromExec(Symbol, Box<dyn Fn(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
     LoadFunc(Symbol, Func),
     Call(Symbol), // TODO can probably get rid of ToData if we insist that the symbol points to a func

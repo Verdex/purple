@@ -30,6 +30,7 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
     let mut instr_ptr = 0;
     let mut locals : Locals<'a, T> = Locals::new(current_function);
     let mut label_map : HashMap<Label, usize> = HashMap::new();
+    let mut params : Vec<Data<'a, T>> = vec![];
     let mut ret = None;
 
     loop {
@@ -122,9 +123,32 @@ pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
                 }
 
             },
-            /*Instr::PushParam(Symbol),
-            Instr::LoadFromExec(Symbol, Box<dyn FnMut(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
-            Instr::LoadFunc(Symbol, Func),*/
+            Instr::PushParam(sym) => {
+                params.push(locals.get(sym)?);
+                instr_ptr += 1;
+            },
+            Instr::PopParam(sym) => {
+                match params.pop() {
+                    Some(param) => locals.set(sym, param)?,
+                    None => return Err(Box::new(VmError::AttemptToPopEmptyParams { current_func: current_function, sym: sym.0 })),
+                }
+                instr_ptr += 1;
+            },
+            Instr::LoadFromExec(sym, f) => {
+                locals.set(sym, f(&locals)?)?;
+                instr_ptr += 1;
+            },
+            Instr::LoadFunc(sym, f) => {
+                locals.set(sym, Data::Func(*f))?;
+                instr_ptr += 1;
+            },
+            /*Instr::Alloc { dest, contents } => {
+
+            },
+            Free(Symbol),
+            Store { address: Symbol, contents : Symbol },
+            Get { address: Symbol, dest: Symbol },
+            */
             _ => panic!("TODO remove"),
         }
 
