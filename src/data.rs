@@ -2,12 +2,8 @@
 use std::collections::HashMap;
 use crate::error::VmError;
 
-pub trait ToData<'a, T> where T : Clone + ToData<'a, T> {
-    fn to_data(&self) -> Data<'a, T>;
-}
-
 #[derive(Debug, Clone)]
-pub enum Data<'a, T : Clone + ToData<'a, T>> {
+pub enum Data<'a, T : Clone> {
     Address(&'a T), // TODO probably becomes Address(Heap)
     Value(T),
     Func(Func),
@@ -20,12 +16,12 @@ pub struct Label(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Symbol(pub usize);
 
-pub struct FuncDef<'a, T : Clone + ToData<'a, T>> {
+pub struct FuncDef<'a, T : Clone> {
     pub params : Vec<Label>,
     pub body : Vec<Instr<'a, T>>,
 }
 
-pub enum Instr<'a, T : Clone + ToData<'a, T>> { 
+pub enum Instr<'a, T : Clone> { 
     Label(Label),
     Jump(Label),
     BranchOnTrue(Label, Box<dyn Fn(&Locals<'a, T>) -> Result<bool, Box<dyn std::error::Error>>>),
@@ -36,8 +32,7 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
     PopParam(Symbol),
     LoadFromExec(Symbol, Box<dyn Fn(&Locals<'a, T>) -> Result<Data<'a, T>, Box<dyn std::error::Error>>>),
     LoadFunc(Symbol, Func),
-    Call(Symbol), // TODO can probably get rid of ToData if we insist that the symbol points to a func
-                  // with the get from address at symbol we should be able to pull out funcs from heap
+    Call(Symbol), 
     Alloc { dest: Symbol, contents : Symbol }, 
     Free(Symbol),
     Store { address: Symbol, contents : Symbol },
@@ -45,12 +40,12 @@ pub enum Instr<'a, T : Clone + ToData<'a, T>> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Locals<'a, T> where T : Clone + ToData<'a, T> {
+pub struct Locals<'a, T> where T : Clone {
     f : usize,
     v : HashMap<Symbol, Data<'a, T>>,
 } 
 
-impl<'a, T> Locals<'a, T> where T : Clone + ToData<'a, T> {
+impl<'a, T> Locals<'a, T> where T : Clone {
     pub fn new(func : usize) -> Self {
         Locals { v : HashMap::new(), f : func }
     }

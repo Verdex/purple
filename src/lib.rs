@@ -7,7 +7,7 @@ mod data;
 use crate::error::VmError;
 use crate::data::*;
 
-struct Frame<'a, T : Clone + ToData<'a, T>> {
+struct Frame<'a, T : Clone> {
     instr_ptr : usize,
     locals : Locals<'a, T>,
     current_function : usize,
@@ -15,7 +15,7 @@ struct Frame<'a, T : Clone + ToData<'a, T>> {
 }
 
 
-pub fn run<'a, T : Clone + ToData<'a, T>>( func_defs : &'a Vec<FuncDef<'a, T>>
+pub fn run<'a, T : Clone>( func_defs : &'a Vec<FuncDef<'a, T>>
                                          , heap : &'a mut Vec<Data<'a, T>> 
                                          ) 
                                          -> Result<Data<'a, T>, Box<dyn std::error::Error>> {
