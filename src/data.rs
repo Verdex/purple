@@ -16,7 +16,7 @@ pub struct Label(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Symbol(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct Address(pub usize);
+pub struct Address(pub u64, pub u64);
 
 pub struct FuncDef<T : Clone> {
     pub params : Vec<Label>,

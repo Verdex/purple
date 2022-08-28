@@ -16,9 +16,10 @@ struct Frame<T : Clone> {
 
 
 pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
-                                         , heap : &mut Vec<Data<T>> 
-                                         ) 
-                                         -> Result<Data<T>, Box<dyn std::error::Error>> {
+                     , heap : &mut HashMap<Address, Data<T>> ) -> Result<Data<T>, Box<dyn std::error::Error>> {
+
+    let mut heap_session : u64 = heap.keys().map(|x| x.0).max().unwrap_or(0) + 1;
+    let mut heap_element : u64 = 1;
 
     if func_defs.len() == 0 {
         return Err(Box::new(VmError::FunctionDoesNotExist(0)));
@@ -143,9 +144,23 @@ pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
                 instr_ptr += 1;
             },
             Instr::Alloc { dest, contents } => {
+                let d = locals.get(contents)?;
+                let address = Address(heap_session, heap_element);
+                heap.insert( address, d );
+
+                match heap_element.overflowing_add(1) {
+                    (v, false) => heap_element = v, 
+                    (v, true) => { heap_session += 1; heap_element = v; },
+                }
+
+                locals.set(dest, Data::Address(address))?;
+                
+                instr_ptr += 1;
+            },
+            /*Instr::Free(sym) => {
+                // TODO error when given not an address or an address that does not exist
 
             },
-            /*Free(Symbol),
             Store { address: Symbol, contents : Symbol },
             Get { address: Symbol, dest: Symbol },
             */
@@ -159,9 +174,9 @@ pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+
     }
 }
