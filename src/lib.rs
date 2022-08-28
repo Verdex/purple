@@ -7,30 +7,30 @@ mod data;
 use crate::error::VmError;
 use crate::data::*;
 
-struct Frame<'a, T : Clone> {
+struct Frame<T : Clone> {
     instr_ptr : usize,
-    locals : Locals<'a, T>,
+    locals : Locals<T>,
     current_function : usize,
     label_map : HashMap<Label, usize>,
 }
 
 
-pub fn run<'a, T : Clone>( func_defs : &'a Vec<FuncDef<'a, T>>
-                                         , heap : &'a mut Vec<Data<'a, T>> 
+pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
+                                         , heap : &mut Vec<Data<T>> 
                                          ) 
-                                         -> Result<Data<'a, T>, Box<dyn std::error::Error>> {
+                                         -> Result<Data<T>, Box<dyn std::error::Error>> {
 
     if func_defs.len() == 0 {
         return Err(Box::new(VmError::FunctionDoesNotExist(0)));
     }
 
-    let mut stack : Vec<Frame<'a, T>> = vec![];
+    let mut stack : Vec<Frame<T>> = vec![];
     let mut current_function = 0;
     let mut instrs = &func_defs[current_function].body;
     let mut instr_ptr = 0;
-    let mut locals : Locals<'a, T> = Locals::new(current_function);
+    let mut locals : Locals<T> = Locals::new(current_function);
     let mut label_map : HashMap<Label, usize> = HashMap::new();
-    let mut params : Vec<Data<'a, T>> = vec![];
+    let mut params : Vec<Data<T>> = vec![];
     let mut ret = None;
 
     loop {
@@ -104,7 +104,7 @@ pub fn run<'a, T : Clone>( func_defs : &'a Vec<FuncDef<'a, T>>
                         let old_function = current_function;
                         let mut old_instrs = &func_defs[f.0].body;
                         let old_instr_ptr = instr_ptr;
-                        let mut old_locals : Locals<'a, T> = Locals::new(f.0);
+                        let mut old_locals : Locals<T> = Locals::new(f.0);
                         let mut old_label_map : HashMap<Label, usize> = HashMap::new();
 
                         current_function = f.0;
@@ -142,10 +142,10 @@ pub fn run<'a, T : Clone>( func_defs : &'a Vec<FuncDef<'a, T>>
                 locals.set(sym, Data::Func(*f))?;
                 instr_ptr += 1;
             },
-            /*Instr::Alloc { dest, contents } => {
+            Instr::Alloc { dest, contents } => {
 
             },
-            Free(Symbol),
+            /*Free(Symbol),
             Store { address: Symbol, contents : Symbol },
             Get { address: Symbol, dest: Symbol },
             */
