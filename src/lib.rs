@@ -157,11 +157,24 @@ pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
                 
                 instr_ptr += 1;
             },
-            /*Instr::Free(sym) => {
-                // TODO error when given not an address or an address that does not exist
-
+            Instr::Free(sym) => {
+                match locals.get(sym)? {
+                    Data::Address(address) => { 
+                        match heap.remove(&address) {
+                            Some(_) => { },
+                            None => return Err(Box::new(VmError::AttemptToFreeUnallocatedAddress { 
+                                current_func: current_function, 
+                                sym: sym.0,
+                                address: (address.0, address.1),
+                            })),
+                        }
+                    },
+                    Data::Value(_) => return Err(Box::new(VmError::AttemptToFreeValue { current_func: current_function, sym: sym.0 })),
+                    Data::Func(_) => return Err(Box::new(VmError::AttemptToFreeFunc { current_func: current_function, sym: sym.0 })),
+                }
+                instr_ptr += 1;
             },
-            Store { address: Symbol, contents : Symbol },
+            /*Store { address: Symbol, contents : Symbol },
             Get { address: Symbol, dest: Symbol },
             */
             _ => panic!("TODO remove"),
