@@ -4,7 +4,6 @@ use crate::error::VmError;
 
 #[derive(Debug, Clone)]
 pub enum Data<T : Clone> {
-    Address(Address), 
     Value(T),
     Func(Func),
 }
@@ -15,15 +14,13 @@ pub struct Func(pub usize);
 pub struct Label(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Symbol(pub usize);
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct Address(pub u64, pub u64);
 
-pub struct FuncDef<T : Clone> {
+pub struct FuncDef<T : Clone, Env> {
     pub params : Vec<Label>,
-    pub body : Vec<Instr<T>>,
+    pub body : Vec<Instr<T, Env>>,
 }
 
-pub enum Instr<T : Clone> { 
+pub enum Instr<T : Clone, Env> { 
     Label(Label),
     Jump(Label),
     BranchOnTrue(Label, Box<dyn Fn(&Locals<T>) -> Result<bool, Box<dyn std::error::Error>>>),
@@ -35,10 +32,8 @@ pub enum Instr<T : Clone> {
     LoadFromExec(Symbol, Box<dyn Fn(&Locals<T>) -> Result<Data<T>, Box<dyn std::error::Error>>>),
     LoadFunc(Symbol, Func),
     Call(Symbol), 
-    Alloc { dest: Symbol, contents : Symbol }, 
-    Free(Symbol),
-    Store { address: Symbol, contents : Symbol },
-    Get { address: Symbol, dest: Symbol },
+    SysCall(Box<dyn Fn(&Locals<T>, &mut Env) -> Result<(), Box<dyn std::error::Error>>>),
+    LoadFromSysCall(Symbol, Box<dyn Fn(&Locals<T>, &mut Env) -> Result<Data<T>, Box<dyn std::error::Error>>>),
 }
 
 #[derive(Debug, Clone)]

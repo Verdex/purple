@@ -15,11 +15,7 @@ struct Frame<T : Clone> {
 }
 
 
-pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
-                     , heap : &mut HashMap<Address, Data<T>> ) -> Result<Data<T>, Box<dyn std::error::Error>> {
-
-    let mut heap_session : u64 = heap.keys().map(|x| x.0).max().unwrap_or(0) + 1;
-    let mut heap_element : u64 = 1;
+pub fn run<T : Clone, Env>( func_defs : &Vec<FuncDef<T, Env>>, env: &mut Env ) -> Result<Data<T>, Box<dyn std::error::Error>> {
 
     if func_defs.len() == 0 {
         return Err(Box::new(VmError::FunctionDoesNotExist(0)));
@@ -143,41 +139,14 @@ pub fn run<T : Clone>( func_defs : &Vec<FuncDef<T>>
                 locals.set(sym, Data::Func(*f))?;
                 instr_ptr += 1;
             },
-            Instr::Alloc { dest, contents } => {
-                let d = locals.get(contents)?;
-                let address = Address(heap_session, heap_element);
-                heap.insert( address, d );
-
-                match heap_element.overflowing_add(1) {
-                    (v, false) => heap_element = v, 
-                    (v, true) => { heap_session += 1; heap_element = v; },
-                }
-
-                locals.set(dest, Data::Address(address))?;
-                
+            Instr::SysCall(f) => {
+                f(&locals, env)?;
                 instr_ptr += 1;
             },
-            Instr::Free(sym) => {
-                match locals.get(sym)? {
-                    Data::Address(address) => { 
-                        match heap.remove(&address) {
-                            Some(_) => { },
-                            None => return Err(Box::new(VmError::AttemptToFreeUnallocatedAddress { 
-                                current_func: current_function, 
-                                sym: sym.0,
-                                address: (address.0, address.1),
-                            })),
-                        }
-                    },
-                    Data::Value(_) => return Err(Box::new(VmError::AttemptToFreeValue { current_func: current_function, sym: sym.0 })),
-                    Data::Func(_) => return Err(Box::new(VmError::AttemptToFreeFunc { current_func: current_function, sym: sym.0 })),
-                }
+            Instr::LoadFromSysCall(sym, f) => {
+                locals.set(sym, f(&locals, env)?)?;
                 instr_ptr += 1;
             },
-            /*Store { address: Symbol, contents : Symbol },
-            Get { address: Symbol, dest: Symbol },
-            */
-            _ => panic!("TODO remove"),
         }
 
     }
