@@ -158,8 +158,23 @@ pub fn run<T : Clone, Env>( func_defs : &Vec<FuncDef<T, Env>>, env: &mut Env )
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn it_works() {
 
+    #[test]
+    fn entry_should_return_data() -> Result<(), Box<dyn std::error::Error>> {
+        let var_sym = Symbol(0);
+        let func_defs = vec![FuncDef { params: vec![]
+                                     , body: vec![ Instr::LoadValue(var_sym, 55)
+                                                 , Instr::Return(var_sym)
+                                                 ]
+                                     }];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 55 );
+        }
+        else { 
+            assert!(false);
+        }
+
+        Ok(())
     }
 }
