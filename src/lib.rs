@@ -15,7 +15,8 @@ struct Frame<T : Clone> {
 }
 
 
-pub fn run<T : Clone, Env>( func_defs : &Vec<FuncDef<T, Env>>, env: &mut Env ) -> Result<Data<T>, Box<dyn std::error::Error>> {
+pub fn run<T : Clone, Env>( func_defs : &Vec<FuncDef<T, Env>>, env: &mut Env ) 
+    -> Result<Option<Data<T>>, Box<dyn std::error::Error>> {
 
     if func_defs.len() == 0 {
         return Err(Box::new(VmError::FunctionDoesNotExist(0)));
@@ -151,7 +152,7 @@ pub fn run<T : Clone, Env>( func_defs : &Vec<FuncDef<T, Env>>, env: &mut Env ) -
 
     }
 
-    Err(Box::new(VmError::SymbolDoesNotExist { func: 0, sym: 0 }))
+    Ok(ret)
 }
 
 #[cfg(test)]
