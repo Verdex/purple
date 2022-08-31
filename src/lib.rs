@@ -26,11 +26,10 @@ pub fn run<T : Clone, Env>( func_defs : &Vec<Vec<Instr<T, Env>>>, env: &mut Env 
         return Err(Box::new(VmError::FunctionDoesNotExist(0)));
     }
 
-    let mut func_defs_with_label = vec![];
-    for (func, func_def) in func_defs.iter().enumerate() {
-        let x = setup_label_map(func_def, Func(func))?;
-        func_defs_with_label.push(x);
-    }
+    let func_defs_with_label = func_defs.iter()
+                                        .enumerate()
+                                        .map(|(index, fd)| setup_label_map(fd, Func(index)))
+                                        .collect::<R<Vec<_>>>()?;
 
     let mut stack : Vec<Frame<T>> = vec![];
     let mut current_function = 0;
