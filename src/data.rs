@@ -15,11 +15,6 @@ pub struct Label(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Symbol(pub usize);
 
-pub struct FuncDef<T : Clone, Env> {
-    pub params : Vec<Label>,
-    pub body : Vec<Instr<T, Env>>,
-}
-
 pub enum Instr<T : Clone, Env> { 
     Label(Label),
     Jump(Label),
