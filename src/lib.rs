@@ -182,6 +182,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn should_immediately_return_on_empty_entry_function() -> R<()> {
+        let func_defs : Vec<Vec<Instr<u8, _>>> = vec![vec![]];
+
+        let result = run(&func_defs, &mut 0)?;
+
+        assert!( matches!( result, None ) );
+        Ok(())
+    } 
+
+    #[test]
     fn should_return_data() -> R<()> {
         let var_sym = Symbol(0);
         let func_defs = vec![ vec![ Instr::LoadValue(var_sym, 55)
@@ -216,6 +226,107 @@ mod tests {
             assert_eq!( result, 10 );
         }
         else { 
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_push_and_pop_of_param() -> R<()> {
+        let init = Symbol(0);
+        let ret = Symbol(1);
+        let func_defs = vec![ vec![ Instr::LoadValue(init, 10)
+                                  , Instr::PushParam(init)
+                                  , Instr::PopParam(ret)
+                                  , Instr::Return(ret)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 10 );
+        }
+        else { 
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_sys_call() -> R<()> {
+        let init = Symbol(0);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 10)
+                                  , Instr::SysCall(Box::new(
+                                        move |locals, env| { 
+                                            if let Data::Value(x) = locals.get(&init)? {
+                                                *env = x;
+                                            }
+                                            return Ok(()); 
+                                        })) 
+                                  ]
+                            ];
+
+        let mut env : usize = 0;
+        let result = run(&func_defs, &mut env)?;
+
+        assert!( matches!( result, None ) );
+        assert_eq!( env, 10 );
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_load_from_sys_call() -> R<()> {
+        let init = Symbol(0);
+        let ret = Symbol(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::LoadFromSysCall(ret, Box::new(
+                                        move |locals, env| { 
+                                            if let Data::Value(x) = locals.get(&init)? {
+                                                return Ok(Data::Value(*env + x));
+                                            }
+                                            panic!("!");
+                                        })) 
+                                  , Instr::Return(ret),
+                                  ]
+                            ];
+
+        let mut env : usize = 11;
+        if let Data::Value( result ) = run(&func_defs, &mut env)?.unwrap() {
+            assert_eq!( result, 18 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_load_from_exec() -> R<()> {
+        let init = Symbol(0);
+        let ret = Symbol(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::LoadFromExec(ret, Box::new(
+                                        move |locals| { 
+                                            if let Data::Value(x) = locals.get(&init)? {
+                                                return Ok(Data::Value(x + 11));
+                                            }
+                                            panic!("!");
+                                        })) 
+                                  , Instr::Return(ret),
+                                  ]
+                            ];
+
+        let mut env : usize = 11;
+        if let Data::Value( result ) = run(&func_defs, &mut env)?.unwrap() {
+            assert_eq!( result, 18 );
+        }
+        else {
             assert!(false);
         }
 
