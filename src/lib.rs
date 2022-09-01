@@ -332,4 +332,70 @@ mod tests {
 
         Ok(())
     } 
+
+    #[test]
+    fn should_handle_branch_on_true_when_true() -> R<()> {
+        let init = Symbol(0);
+        let ignore = Symbol(1);
+        let label = Label(0);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::LoadValue(ignore, 11)
+                                  , Instr::BranchOnTrue(label, Box::new(
+                                        move |locals| { 
+                                            if let Data::Value(x) = locals.get(&init)? {
+                                                Ok(x == 7)
+                                            }
+                                            else {
+                                                Ok(false)
+                                            }
+                                        })) 
+                                  , Instr::Return(ignore)
+                                  , Instr::Label(label)  
+                                  , Instr::Return(init)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 7 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_branch_on_true_when_false() -> R<()> {
+        let init = Symbol(0);
+        let ignore = Symbol(1);
+        let label = Label(0);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::LoadValue(ignore, 11)
+                                  , Instr::BranchOnTrue(label, Box::new(
+                                        move |locals| { 
+                                            if let Data::Value(x) = locals.get(&init)? {
+                                                Ok(x == 0)
+                                            }
+                                            else {
+                                                Ok(false)
+                                            }
+                                        })) 
+                                  , Instr::Return(init)
+                                  , Instr::Label(label)  
+                                  , Instr::Return(ignore)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 7 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    } 
 }
