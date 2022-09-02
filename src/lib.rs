@@ -107,7 +107,7 @@ pub fn run<T : Clone, Env>( func_defs : &Vec<Vec<Instr<T, Env>>>, env: &mut Env 
                         }
 
                         let old_function = current_function;
-                        let old_instr_ptr = instr_ptr;
+                        let old_instr_ptr = instr_ptr + 1;
                         let mut old_locals : Locals<T> = Locals::new(f.0);
 
                         current_function = f.0;
@@ -153,7 +153,6 @@ pub fn run<T : Clone, Env>( func_defs : &Vec<Vec<Instr<T, Env>>>, env: &mut Env 
                 instr_ptr += 1;
             },
         }
-
     }
 
     Ok(ret)
