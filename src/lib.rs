@@ -491,7 +491,106 @@ mod tests {
     }
 
     #[test]
-    fn should_handle_env_across_multiple_sys_calls() -> R<()> {
-        // TODO 
+    fn should_preserve_symbol_isolation_between_calls() -> R<()> {
+        let sym = Symbol(0);
+        let f = Func(1);
+        let f1 = Symbol(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(sym, 2)
+                                  , Instr::LoadFunc(f1, f)
+                                  , Instr::Call(f1)
+                                  , Instr::Return(sym)
+                                  ]
+                            , vec![ Instr::LoadValue(sym, 7)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 2 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn should_handle_closure_behavior() -> R<()> {
+        // TODO
+        assert!(false);
+        Ok(())
+    }
+
+    #[test]
+    fn should_handle_recursive_behavior() -> R<()> {
+        let input = Symbol(1);
+        let ret = Symbol(2);
+        let next = Symbol(3);
+        let f = Func(1);
+        let f1 = Symbol(0);
+        let end = Label(0);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(input, 5)
+                                  , Instr::PushParam(input)
+                                  , Instr::LoadFunc(f1, f)
+                                  , Instr::Call(f1)
+                                  , Instr::LoadFromReturn(ret)
+                                  , Instr::Return(ret)
+                                  ]
+                            , vec![ Instr::PopParam(input)
+                                  , Instr::BranchOnTrue( end, Box::new(
+                                    move |locals| {
+                                        if let Data::Value( 0 ) = locals.get(&input)? {
+                                            Ok(true)
+                                        }
+                                        else {
+                                            Ok(false)
+                                        }
+                                    } ) )
+                                  , Instr::LoadFromExec(next, Box::new(
+                                        move |locals| {
+                                            if let Data::Value( x ) = locals.get(&input)? {
+                                                Ok(Data::Value( x - 1 ))
+                                            }
+                                            else {
+                                                Ok(Data::Value(0))
+                                            }
+                                        }
+                                    ))
+                                  , Instr::PushParam(next)
+                                  , Instr::LoadFunc(f1, f)
+                                  , Instr::Call(f1)
+                                  , Instr::LoadFromReturn(ret)
+                                  , Instr::LoadFromExec(ret, Box::new(
+                                        move |locals| {
+                                            let a = locals.get(&input)?;
+                                            let b = locals.get(&ret)?;
+                                            match (a, b) {
+                                                (Data::Value(a), Data::Value(b)) => Ok(Data::Value( a + b )),
+                                                _ => panic!("!"),
+                                            }
+                                        }
+                                    ))
+                                  , Instr::Return(ret)
+                                  , Instr::Label(end)
+                                  , Instr::Return(input)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 15 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn should() {
+        // TODO algos
+        assert!(false);
     }
 }
