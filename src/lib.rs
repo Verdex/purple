@@ -397,4 +397,101 @@ mod tests {
 
         Ok(())
     } 
+
+    #[test]
+    fn should_handle_call() -> R<()> {
+        let init = Symbol(0);
+        let f = Symbol(1);
+        let f1 = Func(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::LoadFunc(f, f1)
+                                  , Instr::Call(f)
+                                  , Instr::Return(init)
+                                  ]
+                            , vec![]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 7 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_call_with_return() -> R<()> {
+        let init = Symbol(0);
+        let f = Symbol(1);
+        let f1 = Func(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadFunc(f, f1)
+                                  , Instr::Call(f)
+                                  , Instr::LoadFromReturn(init)
+                                  , Instr::Return(init)
+                                  ]
+                            , vec![ Instr::LoadValue(init, 7)
+                                  , Instr::Return(init)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 7 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    } 
+
+    #[test]
+    fn should_handle_params_across_function_calls() -> R<()> {
+        let init = Symbol(0);
+        let init2 = Symbol(1);
+        let f = Symbol(1);
+        let f1 = Func(1);
+        let func_defs : Vec<Vec<Instr<usize, usize>>> = 
+                        vec![ vec![ Instr::LoadValue(init, 7)
+                                  , Instr::PushParam(init)
+                                  , Instr::LoadValue(init, 11)
+                                  , Instr::PushParam(init)
+                                  , Instr::LoadFunc(f, f1)
+                                  , Instr::Call(f)
+                                  , Instr::LoadFromReturn(init)
+                                  , Instr::Return(init)
+                                  ]
+                            , vec![ Instr::PopParam(init)
+                                  , Instr::PopParam(init2)
+                                  , Instr::LoadFromExec(init, Box::new(
+                                    move |locals| {
+                                        let a = locals.get(&init)?;
+                                        let b = locals.get(&init2)?;
+
+                                        match (a, b) {
+                                            (Data::Value(a), Data::Value(b)) => Ok(Data::Value(a + b)),
+                                            _ => Ok(Data::Value(0)),
+                                        }
+                                    }))
+                                  , Instr::Return(init)
+                                  ]
+                            ];
+
+        if let Data::Value( result ) = run(&func_defs, &mut 0)?.unwrap() {
+            assert_eq!( result, 18 );
+        }
+        else {
+            assert!(false);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn should_handle_env_across_multiple_sys_calls() -> R<()> {
+        // TODO 
+    }
 }
