@@ -1,8 +1,8 @@
 
 use std::collections::HashMap;
 
-mod error;
-mod data;
+pub mod error;
+pub mod data;
 
 use crate::error::VmError;
 use crate::data::*;
@@ -512,13 +512,6 @@ mod tests {
             assert!(false);
         }
 
-        Ok(())
-    }
-
-    #[test]
-    fn should_handle_closure_behavior() -> R<()> {
-        // TODO
-        assert!(false);
         Ok(())
     }
 
