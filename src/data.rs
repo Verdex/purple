@@ -8,7 +8,7 @@ pub enum Data<T : Clone> {
     Func(Func),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Func(pub usize);
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Label(pub usize);
