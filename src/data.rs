@@ -27,8 +27,8 @@ pub enum Instr<T : Clone, Env> {
     LoadFromExec(Symbol, Box<dyn Fn(&Locals<T>) -> Result<Data<T>, Box<dyn std::error::Error>>>),
     LoadFunc(Symbol, Func),
     Call(Symbol), 
-    SysCall(Box<dyn Fn(&Locals<T>, &mut Env) -> Result<(), Box<dyn std::error::Error>>>),
-    LoadFromSysCall(Symbol, Box<dyn Fn(&Locals<T>, &mut Env) -> Result<Data<T>, Box<dyn std::error::Error>>>),
+    SysCall(Box<dyn Fn(&mut Locals<T>, &mut Env) -> Result<(), Box<dyn std::error::Error>>>),
+    LoadFromSysCall(Symbol, Box<dyn Fn(&mut Locals<T>, &mut Env) -> Result<Data<T>, Box<dyn std::error::Error>>>),
 }
 
 #[derive(Debug, Clone)]

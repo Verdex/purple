@@ -147,11 +147,12 @@ pub fn run<T : Clone, Env>( func_defs : &HashMap<Func, Vec<Instr<T, Env>>>, env:
                 instr_ptr += 1;
             },
             Instr::SysCall(f) => {
-                f(&locals, env)?;
+                f(&mut locals, env)?;
                 instr_ptr += 1;
             },
             Instr::LoadFromSysCall(sym, f) => {
-                locals.set(sym, f(&locals, env)?)?;
+                let result = f(&mut locals, env)?;
+                locals.set(sym, result)?;
                 instr_ptr += 1;
             },
         }
